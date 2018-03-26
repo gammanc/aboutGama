@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">about</string>
+    <string name="name">Emerson Nolasco</string>
+    <string name="career">Ingeniería Informática</string>
+    <string name="instalink"><a href="https://www.instagram.com/gamalielgram/">@gamalielgram</a></string>
+    <string name="gitlink"><a href="https://github.com/gammanc/">gammanc</a></string>
+    <string name="maillink"><a href="mailto:00215316@uca.edu.sv">00215316</a></string>
+    <string name="tellink"><a href="tel:76509109">7650 9109</a></string>
+</resources>
