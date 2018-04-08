@@ -1,11 +1,13 @@
 package com.gamma.about;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.FileProvider;
@@ -17,24 +19,27 @@ import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import static java.security.AccessController.getContext;
 
 public class MainActivity extends AppCompatActivity {
     FloatingActionButton fa_share;
     Context myContext;
     Uri imgUri;
+
     String sharetext ="Emerson Nolasco - Ingeniería Informáctica" +
             "\n Github: https://github.com/gammanc/" +
             "\n Instagram: https://www.instagram.com/gamalielgram/" +
             "\n Correo: 00215316@uca.edu.sv" +
             "\n Teléfono: 7***-***9";
+    final int PERMISSION_REQUEST_FOR_EXTERNAL_STORAGE = 10;
     TextView powered;
     String imgPath;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,13 +51,12 @@ public class MainActivity extends AppCompatActivity {
         fa_share = findViewById(R.id.fashare);
         fa_share.setOnClickListener(share);
 
-        imgPath = createImage(R.drawable.profile);
     }
 
     View.OnClickListener share = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            sharePicture();
+            checkPermission();
         }
     };
 
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
     * Crea una copia de la imagen de perfil en la memoria del teléfono
     * */
     private String createImage(int resource){
+
         Bitmap bitmap= BitmapFactory.decodeResource(getResources(),resource);
         String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/profile.jpg";
         OutputStream out = null;
@@ -118,6 +123,47 @@ public class MainActivity extends AppCompatActivity {
 
         shareIntent.setType("image/*");
         startActivity(Intent.createChooser(shareIntent, "Compartir"));
+    }
+
+    /*
+    * Se verifica si se tiene permisos para escribir la imagen
+    * Esto se requiere desde Android 6.0
+    * */
+    public void checkPermission(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M  &&
+                this.getBaseContext().checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+                        PackageManager.PERMISSION_GRANTED){
+            //Si no se tiene los permisos, se solicitan al usuario
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_FOR_EXTERNAL_STORAGE);
+        }
+        else{
+            imgPath = createImage(R.drawable.profile);
+            sharePicture();
+        }
+    }
+
+    /*
+    * Se sobreescribe este metodo para manejar la respuesta dada por el usuario.
+    * Si se concede el permiso, se comparte la imagen.
+    * */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults){
+        switch (requestCode){
+            case PERMISSION_REQUEST_FOR_EXTERNAL_STORAGE: {
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    System.out.println("Permiso concedido! Escribiendo imagen...");
+                    imgPath = createImage(R.drawable.profile);
+                    System.out.println("Imagen escrita. Compartiendo...");
+                    sharePicture();
+                    System.out.println("Imagen compartida con exito");
+                }
+                else{
+                    Toast.makeText(this, "No se pudo compartir la imagen, por favor concede el permiso", Toast.LENGTH_LONG);
+                }
+                return;
+            }
+        }
+        //android.os.Process.killProcess(android.os.Process.myPid());
     }
 
 }
